@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 股評助理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 flex flex-col items-center font-sans text-slate-800">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 border border-slate-200">
+        <h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">📈 AI 股評助理</h1>
+        
+        <div class="space-y-4">
+            <div class="flex gap-2">
+                <input id="stockInput" class="flex-grow border border-slate-300 rounded-lg px-4 py-2 text-black outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 2330.TW">
+                <button onclick="analyzeStock()" id="analyzeBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700">分析</button>
+            </div>
+
+            <div class="mt-6 bg-slate-50 rounded-xl p-4 border border-slate-100 min-h-[180px]">
+                <p id="resultText" class="whitespace-pre-wrap leading-relaxed text-slate-700 text-sm">目前的市場數據將在此呈現...</p>
+            </div>
+
+            <button id="voiceBtn" onclick="handleVoice()" class="hidden w-full mt-4 py-4 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 text-white">
+                <span id="btnLabel">📢 播放語音報告</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isPlaying = false;
+        let isPaused = false;
+        const synth = window.speechSynthesis;
+        let utter = null;
+
+        async function analyzeStock() {
+            const stock = document.getElementById('stockInput').value;
+            if (!stock) return alert("請輸入代號");
+
+            const resultDisplay = document.getElementById('resultText');
+            resultDisplay.innerText = "AI 分析中...";
+            synth.cancel();
+
+            // 這裡模擬 API 回傳，因為純 HTML 無法直接跑後端 API
+            // 實際使用時，你需要把這裡換成你的 API 網址
+            setTimeout(() => {
+                const mockText = "台積電（2330）目前技術面偏強，RSI指標顯示仍在安全區域。建議分批佈局。";
+                resultDisplay.innerText = mockText;
+                showVoiceBtn();
+            }, 1000);
+        }
+
+        function showVoiceBtn() {
+            const btn = document.getElementById('voiceBtn');
+            btn.classList.remove('hidden');
+            updateBtnStyle();
+        }
+
+        function updateBtnStyle() {
+            const btn = document.getElementById('voiceBtn');
+            const label = document.getElementById('btnLabel');
+
+            if (!isPlaying) {
+                btn.style.backgroundColor = "#10b981"; // 綠
+                label.innerText = "📢 播放語音報告";
+            } else if (isPaused) {
+                btn.style.backgroundColor = "#f59e0b"; // 橘
+                label.innerText = "▶️ 繼續播放";
+            } else {
+                btn.style.backgroundColor = "#ef4444"; // 紅
+                label.innerText = "⏸️ 暫停播放";
+            }
+        }
+
+        function handleVoice() {
+            const text = document.getElementById('resultText').innerText;
+
+            if (isPlaying) {
+                if (isPaused) {
+                    synth.resume();
+                    isPaused = false;
+                } else {
+                    synth.pause();
+                    isPaused = true;
+                }
+                updateBtnStyle();
+            } else {
+                synth.cancel();
+                utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'zh-TW';
+                
+                utter.onstart = () => { isPlaying = true; isPaused = false; updateBtnStyle(); };
+                utter.onend = () => { isPlaying = false; isPaused = false; updateBtnStyle(); };
+                
+                synth.speak(utter);
+            }
+        }
+    </script>
+</body>
+</html>
